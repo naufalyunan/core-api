@@ -1,0 +1,20 @@
+{
+  "organizations": [
+    {
+      "name": "Red Ridge Mining",
+      "slug": "red-ridge",
+      "users": [
+        {"email": "admin@redridge.example", "password": "DemoPass123!", "role": "admin"},
+        {"email": "viewer@redridge.example", "password": "DemoPass123!", "role": "viewer"}
+      ]
+    },
+    {
+      "name": "Atacama Copper Co",
+      "slug": "atacama-copper",
+      "users": [
+        {"email": "admin@atacama.example", "password": "DemoPass123!", "role": "admin"},
+        {"email": "viewer@atacama.example", "password": "DemoPass123!", "role": "viewer"}
+      ]
+    }
+  ]
+}

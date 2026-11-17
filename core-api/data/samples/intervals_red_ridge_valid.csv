@@ -1,0 +1,12 @@
+hole_id,from_m,to_m,lithology,rqd_pct
+DH-001,0,5,Sandstone,85
+DH-001,5,12,Shale,65
+DH-001,12,20,Limestone,92
+DH-001,20,34,Shale,58
+DH-001,34,47.5,Sandstone,88
+DH-001,47.5,60,Limestone,94
+DH-002,0,3,Laterite,20
+DH-002,3,8,Granite,70
+DH-002,8,15,Diorite,78
+DH-002,15,30.2,Granite,95
+DH-002,30.2,45,Diorite,91
