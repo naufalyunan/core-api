@@ -28,7 +28,7 @@ from app.core.security import hash_password
 from app.db.base import Base
 from app.db.init_db import create_tables
 from app.db.models import Organization, Role, User
-from app.db.session import get_session
+from app.db.session import get_session, get_session_factory
 from app.main import create_app
 from app.schemas.user import CurrentUser
 
@@ -127,6 +127,8 @@ def client_as(
     def _make(user: CurrentUser | None) -> AsyncClient:
         app = create_app()
         app.dependency_overrides[get_session] = _get_test_session
+        # Background jobs (ingestion) open their own sessions: point them at the test DB too.
+        app.dependency_overrides[get_session_factory] = lambda: session_factory
         if user is not None:
             app.dependency_overrides[get_current_user] = lambda: user
         return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")

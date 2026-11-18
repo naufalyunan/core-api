@@ -35,6 +35,13 @@ class DrillholeRepository:
             )
         )
 
+    async def list_all(self, organization_id: uuid.UUID) -> Sequence[Drillhole]:
+        """Every drillhole of one organization (used by ingestion to resolve hole_ids)."""
+        rows = await self.session.scalars(
+            select(Drillhole).where(Drillhole.organization_id == organization_id)
+        )
+        return rows.all()
+
     async def get_by_hole_id(self, organization_id: uuid.UUID, hole_id: str) -> Drillhole | None:
         return await self.session.scalar(
             select(Drillhole).where(

@@ -5,18 +5,19 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Settings, get_settings
 from app.core.exceptions import PermissionDeniedError
 from app.core.security import decode_access_token
 from app.db.models.user import Role
-from app.db.session import get_session
+from app.db.session import get_session, get_session_factory
 from app.repositories.user import UserRepository
 from app.schemas.user import CurrentUser
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+SessionFactoryDep = Annotated[async_sessionmaker[AsyncSession], Depends(get_session_factory)]
 
 # Reads the "Authorization: Bearer <token>" header. It also adds an "Authorize" button to
 # /docs where you paste the token. auto_error=False so we return our own 401 below.
