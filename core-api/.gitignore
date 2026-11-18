@@ -27,6 +27,9 @@ htmlcov/
 .pyright/
 .ruff_cache/
 
+# Environment
+.env
+
 # IDEs and local settings
 .vscode/
 .idea/

@@ -1,16 +1,43 @@
 [project]
 name = "core-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "GeoCore API: multi-tenant geoscience (drillhole) data platform"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "asyncpg>=0.32.0",
     "fastapi[standard]>=0.163.1",
+    "pwdlib[argon2]>=0.4.2",
+    "pydantic-settings>=2.16.3",
+    "pyjwt>=2.15.1",
+    "sqlalchemy[asyncio]>=2.1.9",
 ]
 
-[project.scripts]
-core-api = "core_api:main"
+[tool.uv]
+package = false
 
-[build-system]
-requires = ["uv_build>=0.13.8,<0.14.0"]
-build-backend = "uv_build"
+[tool.fastapi]
+entrypoint = "app.main:app"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.5",
+    "testcontainers[postgres]>=4.15.0",
+    "ty>=0.0.104",
+]

@@ -1,0 +1,3 @@
+# AI assistant / tool config (local only)
+.agents/
+.claude/
