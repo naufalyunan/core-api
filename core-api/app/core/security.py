@@ -11,7 +11,7 @@ from app.core.config import get_settings
 
 REQUIRED_CLAIMS = ["sub", "org_id", "role", "exp", "iat"]
 
-# Build the hasher 
+# Build the hasher
 password_hash = PasswordHash.recommended()
 
 # A real Argon2 hash of a random value. Login verifies against it when the email doesn't
