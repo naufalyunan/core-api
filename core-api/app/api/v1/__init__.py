@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, drillholes, health, users, ingestions
+from app.api.v1 import auth, drillholes, health, ingestions, users
 
 v1_router = APIRouter(prefix="/api/v1")
 
