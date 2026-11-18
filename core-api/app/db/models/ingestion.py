@@ -36,8 +36,6 @@ class Ingestion(UUIDPkMixin, TimestampMixin, Base):
         default=IngestionStatus.PENDING,
     )
     original_filename: Mapped[str] = mapped_column(String(255))
-    raw_object_key: Mapped[str | None] = mapped_column(String(500))
-    parquet_object_key: Mapped[str | None] = mapped_column(String(500))
     rows_total: Mapped[int | None]
     rows_valid: Mapped[int | None]
     # e.g. [{"line": 3, "field": "from_m", "message": "overlaps previous interval"}]
