@@ -10,16 +10,30 @@ PyJWT · pwdlib (Argon2) · pytest + Testcontainers · Docker Compose · GitHub 
 ## Quick start
 
 ```bash
-docker compose up --build          # Postgres + API (creates tables on start)
+cp .env.example .env               # then set POSTGRES_PASSWORD and JWT_SECRET
+docker compose up -d --build --wait
+uv run python -m scripts.seed      # demo organizations, users and drillholes
 open http://localhost:8000/docs
 ```
+
+### Demo accounts (from `data/seed/`, password `DemoPass123!`)
+
+| Organization | Admin | Viewer |
+|---|---|---|
+| Red Ridge Mining | `admin@redridge.example` | `viewer@redridge.example` |
+| Atacama Copper Co | `admin@atacama.example` | `viewer@atacama.example` |
+
+In `/docs`: call `POST /api/v1/auth/login`, copy `access_token`, click **Authorize**, paste it.
+Then upload `data/samples/intervals_red_ridge_valid.csv` (or `..._invalid.csv` to see the
+validation report) to `POST /api/v1/ingestions` and poll `GET /api/v1/ingestions/{id}`.
 
 ### Local development
 
 ```bash
 cp .env.example .env
 uv sync
-docker compose up -d db            # just Postgres
+docker compose up -d --wait db     # just Postgres; --wait = until it accepts connections
+uv run python -m scripts.seed      # idempotent: safe to run again
 uv run fastapi dev                 # http://127.0.0.1:8000/docs, auto-reload
 ```
 
@@ -39,7 +53,8 @@ It only creates *missing* tables; it never alters existing ones. After changing 
 in local dev, reset the database:
 
 ```bash
-docker compose down -v && docker compose up -d db
+docker compose down -v && docker compose up -d --wait db
+uv run python -m scripts.seed
 ```
 
 ## Project layout
@@ -52,8 +67,9 @@ app/
   db/                  engine/session, declarative Base, ORM models, create_tables()
   schemas/             Pydantic request/response models (Create / Update / Read)
   services/            business rules + transactions; raise domain errors, not HTTP errors
-  repositories/        SQL queries; every method takes organization_id
-  workers/             background ingestion (Celery, Day 3)
+  repositories/        SQL queries; tenant data is always filtered by organization_id
+scripts/
+  seed.py              idempotent demo data loader
 tests/
   unit/                no DB / no HTTP
   integration/         API + real Postgres
@@ -74,8 +90,13 @@ data/
   exceptions (`NotFoundError`, `ConflictError`, ...) mapped to HTTP in one place.
 - **Constraints in the database too.** Lat/lon ranges, positive depth, `to_m > from_m`,
   RQD 0–100 and per-tenant unique `hole_id` are enforced by Postgres, not only by Pydantic.
-- **Ingestion is asynchronous.** Upload returns `202 Accepted` + a job id; a worker validates
-  and loads rows, so large files never block the request cycle.
+- **Ingestion is asynchronous and all-or-nothing.** Upload returns `202 Accepted` + a job id;
+  a FastAPI background task validates every row (types, ranges, `to_m > from_m`, depth within
+  the hole, overlaps in the file and with stored intervals, `hole_id` owned by the caller's
+  organization) and reports errors with spreadsheet line numbers. One bad row rejects the
+  file, so a dataset is never half-loaded. The job opens its own DB session because the
+  request's session is closed once the response is sent. For production scale this would
+  move to a durable queue (e.g. Celery/Redis) so a server restart can't lose jobs.
 - **Real database in tests.** Testcontainers runs Postgres and the tests create tables with the
   same `create_tables()` the app uses.
 
@@ -84,8 +105,8 @@ data/
 - [x] Skeleton, config, async DB session, models, Docker Compose, CI
 - [x] Drillhole list/get/create with tenant scoping + isolation tests
 - [x] JWT login, password hashing, `get_current_user`, `/me`
-- [ ] Seed script
-- [ ] Drillhole update/delete
-- [ ] CSV ingestion → MinIO → Celery worker → Parquet; ingestion status & errors
+- [x] Drillhole update/delete
+- [x] CSV ingestion: background validation, line-level errors, status polling
+- [x] Idempotent seed script
 - [ ] Structured JSON logging with request IDs
-- [ ] Postgres Row-Level Security, GeoJSON output, Redis caching
+- [ ] Durable job queue, Parquet export, Postgres Row-Level Security, GeoJSON output

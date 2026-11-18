@@ -31,6 +31,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # Healthy once the API answers /health/ready (which also checks the DB).
+      # The slim image has no curl, so use Python's standard library.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 10
 
 volumes:
   pgdata:
