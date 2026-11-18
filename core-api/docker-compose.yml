@@ -1,16 +1,19 @@
+# Credentials come from core-api/.env (git-ignored); Compose reads it automatically.
+# Start from the template: cp .env.example .env
 services:
   db:
     image: postgres:17
     environment:
-      POSTGRES_USER: geocore
-      POSTGRES_PASSWORD: geocore
-      POSTGRES_DB: geocore
+      POSTGRES_USER: ${POSTGRES_USER:-geocore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-geocore}
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U geocore -d geocore"]
+      # $$ = read the variable inside the container, not from .env at startup
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -18,34 +21,16 @@ services:
   api:
     build: .
     environment:
-      DATABASE_URL: postgresql+asyncpg://geocore:geocore@db:5432/geocore
+      # Inside Docker the API reaches Postgres by service name "db" on 5432,
+      # so this overrides the localhost:5433 DATABASE_URL in .env.
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-geocore}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-geocore}
       ENVIRONMENT: local
-      JWT_SECRET: dev-secret-change-me
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
 
-  # --- Day 3 -----------------------------------------------------------------
-  # redis:
-  #   image: redis:7
-  #   ports: ["6379:6379"]
-  #
-  # minio:
-  #   image: minio/minio
-  #   command: server /data --console-address ":9001"
-  #   environment:
-  #     MINIO_ROOT_USER: geocore
-  #     MINIO_ROOT_PASSWORD: geocore-secret
-  #   ports: ["9000:9000", "9001:9001"]
-  #   volumes: [miniodata:/data]
-  #
-  # worker:
-  #   build: .
-  #   command: celery -A app.workers.celery_app worker --loglevel=info
-  #   depends_on: [db, redis, minio]
-
 volumes:
   pgdata:
-  # miniodata:
